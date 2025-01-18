@@ -9,7 +9,7 @@ function App() {
   return (
     <div className='App'>
       <div className='logo-box'>
-        <a href='https://github.com/electron-vite/electron-vite-react' target='_blank'>
+        <a href='www.xiaotudui.com' target='_blank'>
           <img src={logoVite} className='logo vite' alt='Electron + Vite logo' />
           <img src={logoElectron} className='logo electron' alt='Electron + Vite logo' />
         </a>
