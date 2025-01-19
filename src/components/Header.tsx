@@ -16,11 +16,6 @@ export default function Header() {
           <a href="/docs" className="nav-link">文档</a>
           <a href="/about" className="nav-link">关于</a>
         </nav>
-        
-        <div className="header-right">
-          <button className="theme-toggle">🌙</button>
-          <button className="login-button">登录</button>
-        </div>
       </div>
     </header>
   )

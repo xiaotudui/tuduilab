@@ -159,10 +159,11 @@ code {
   top: 0;
   left: 0;
   right: 0;
-  background-color: #1a1a1a;
-  border-bottom: 1px solid #30363d;
+  background-color: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
   padding: 0.5rem 1rem;
   z-index: 1000;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .header-content {
@@ -187,7 +188,7 @@ code {
 .header-title {
   font-size: 1.2rem;
   font-weight: 600;
-  color: #fff;
+  color: #1a1a1a;
 }
 
 .header-nav {
@@ -196,14 +197,31 @@ code {
 }
 
 .nav-link {
-  color: #888;
+  color: #4b5563;
   text-decoration: none;
   font-weight: 500;
   transition: color 0.3s ease;
+  padding: 0.5rem 0;
+  position: relative;
 }
 
 .nav-link:hover {
   color: #646cff;
+}
+
+.nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background-color: #646cff;
+  transition: width 0.3s ease;
+}
+
+.nav-link:hover::after {
+  width: 100%;
 }
 
 .header-right {
@@ -218,20 +236,24 @@ code {
   font-size: 1.2rem;
   cursor: pointer;
   padding: 0.5rem;
+  color: #4b5563;
 }
 
 .login-button {
   background-color: #646cff;
   color: white;
   border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
+  padding: 0.5rem 1.2rem;
+  border-radius: 6px;
   cursor: pointer;
-  transition: background-color 0.3s ease;
+  transition: all 0.3s ease;
+  font-weight: 500;
 }
 
 .login-button:hover {
   background-color: #535bf2;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 /* 为了防止内容被header遮挡，给主内容添加顶部 padding */
