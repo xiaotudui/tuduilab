@@ -1,4 +1,4 @@
-import { app, BrowserWindow, shell, ipcMain } from 'electron'
+import { app, BrowserWindow, shell, ipcMain, dialog } from 'electron'
 import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
@@ -121,3 +121,56 @@ ipcMain.handle('open-win', (_, arg) => {
     childWindow.loadFile(indexHtml, { hash: arg })
   }
 })
+
+// 添加 IPC 处理器
+ipcMain.handle('select-folder', async () => {
+  try {
+    const result = await dialog.showOpenDialog({
+      properties: ['openDirectory']
+    });
+    
+    return {
+      success: !result.canceled,
+      path: result.filePaths[0]
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      error: error?.message || 'Unknown error'
+    };
+  }
+});
+
+ipcMain.handle('get-voc-classes', async (event, { vocPath }) => {
+  try {
+    // 这里添加获取VOC类别的逻辑
+    return {
+      success: true,
+      classes: [] // 返回解析到的类别
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message
+    };
+  }
+});
+
+ipcMain.handle('convert-voc-to-yolo', async (event, { vocPath, outputPath, classes }) => {
+  try {
+    // 这里添加转换逻辑
+    return {
+      success: true,
+      stats: {
+        total: 0,
+        success: 0,
+        failed: 0
+      }
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message
+    };
+  }
+});

@@ -1,4 +1,37 @@
-import { ipcRenderer, contextBridge } from 'electron'
+import { contextBridge, ipcRenderer } from 'electron'
+
+// 自定义 API 类型
+interface CustomAPI {
+  ipcRenderer: {
+    invoke(channel: string, ...args: any[]): Promise<any>;
+  };
+}
+
+// 声明全局类型
+declare global {
+  interface Window {
+    electron: CustomAPI;
+  }
+}
+
+// 创建自定义 API
+const api: CustomAPI = {
+  ipcRenderer: {
+    invoke: (channel: string, ...args: any[]) => ipcRenderer.invoke(channel, ...args)
+  }
+}
+
+// 暴露 API 到渲染进程
+if (process.contextIsolated) {
+  try {
+    contextBridge.exposeInMainWorld('electron', api)
+  } catch (error) {
+    console.error(error)
+  }
+} else {
+  // @ts-ignore (define in dts)
+  window.electron = api
+}
 
 // --------- Expose some API to the Renderer process ---------
 contextBridge.exposeInMainWorld('ipcRenderer', {

@@ -43,7 +43,7 @@ export default function Voc2Yolo() {
       } else {
         addLog('文件夹选择已取消', 'warning');
       }
-    } catch (error) {
+    } catch (error: any) {
       addLog(`选择文件夹时出错: ${error.message}`, 'error');
     }
   };
@@ -59,7 +59,7 @@ export default function Voc2Yolo() {
       } else {
         addLog('输出文件夹选择已取消', 'warning');
       }
-    } catch (error) {
+    } catch (error: any) {
       addLog(`选择输出文件夹时出错: ${error.message}`, 'error');
     }
   };
@@ -76,7 +76,7 @@ export default function Voc2Yolo() {
       } else {
         addLog(`解析类别失败：${result.error}`, 'error');
       }
-    } catch (error) {
+    } catch (error: any) {
       addLog(`解析类别出错: ${error.message}`, 'error');
     } finally {
       setIsLoadingClasses(false);
@@ -109,8 +109,8 @@ export default function Voc2Yolo() {
       } else {
         addLog(`转换失败：${result.error}`, 'error');
       }
-    } catch (error) {
-      addLog(`转换过程出错: ${error.message}`, 'error');
+    } catch (error: any) {
+      addLog(`转换过程出错: ${error?.message || 'Unknown error'}`, 'error');
     } finally {
       setIsConverting(false);
     }
