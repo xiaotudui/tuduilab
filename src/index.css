@@ -271,3 +271,106 @@ code {
 .App {
   padding-top: 4rem;
 }
+
+.app-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem;
+  padding-top: 5rem;
+}
+
+.tools-grid {
+  display: grid;
+  grid-template-columns: repeat(1, 1fr);
+  gap: 1.5rem;
+  padding: 1rem;
+}
+
+/* 在不同屏幕宽度下调整列数 */
+@media (min-width: 640px) {
+  .tools-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .tools-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 1280px) {
+  .tools-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.tool-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  text-decoration: none;
+  color: inherit;
+  max-width: 400px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.tool-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 20px rgba(0, 0, 0, 0.1);
+  border-color: #646cff;
+}
+
+.tool-icon {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+}
+
+.tool-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 0.5rem;
+}
+
+.tool-description {
+  font-size: 0.875rem;
+  color: #6b7280;
+  line-height: 1.5;
+}
+
+/* 暗色模式支持 */
+@media (prefers-color-scheme: dark) {
+  .tool-card {
+    background: #1a1a1a;
+    border-color: #2d2d2d;
+  }
+  
+  .tool-title {
+    color: #e5e7eb;
+  }
+  
+  .tool-description {
+    color: #9ca3af;
+  }
+  
+  .tool-card:hover {
+    border-color: #646cff;
+    box-shadow: 0 12px 20px rgba(0, 0, 0, 0.3);
+  }
+}
+
+@media (min-width: 640px) {
+  .app-container {
+    padding: 2rem;
+    padding-top: 6rem;
+  }
+}

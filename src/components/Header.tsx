@@ -12,7 +12,7 @@ export default function Header() {
         
         <nav className="header-nav flex-1 flex justify-center">
           <div className="flex gap-8">
-            <a href="/" className="nav-link">工具箱</a>
+            <a href="/" className="nav-link">土堆工具箱</a>
           </div>
         </nav>
 
