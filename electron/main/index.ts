@@ -4,6 +4,8 @@ import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import os from 'node:os'
 import { update } from './update'
+import fs from 'node:fs'
+import { promisify } from 'node:util'
 
 const require = createRequire(import.meta.url)
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -42,6 +44,49 @@ if (!app.requestSingleInstanceLock()) {
 let win: BrowserWindow | null = null
 const preload = path.join(__dirname, '../preload/index.mjs')
 const indexHtml = path.join(RENDERER_DIST, 'index.html')
+
+// Add these utility functions
+const readdir = promisify(fs.readdir)
+const readFile = promisify(fs.readFile)
+const writeFile = promisify(fs.writeFile)
+const mkdir = promisify(fs.mkdir)
+
+// Add XML parsing function
+function parseVOCXML(xmlContent: string) {
+  const getNodeText = (xml: string, tag: string): string => {
+    const regex = new RegExp(`<${tag}>([^<]+)</${tag}>`);
+    const match = xml.match(regex);
+    return match ? match[1] : '';
+  };
+
+  const width = getNodeText(xmlContent, 'width');
+  const height = getNodeText(xmlContent, 'height');
+  const objects: any[] = [];
+  const objectRegex = /<object>([\s\S]*?)<\/object>/g;
+  let match;
+
+  while ((match = objectRegex.exec(xmlContent)) !== null) {
+    const objectXml = match[1];
+    const name = getNodeText(objectXml, 'name');
+    const bndboxRegex = /<bndbox>([\s\S]*?)<\/bndbox>/;
+    const bndboxMatch = objectXml.match(bndboxRegex);
+
+    if (name && bndboxMatch) {
+      const bndboxXml = bndboxMatch[1];
+      objects.push({
+        name,
+        bndbox: {
+          xmin: getNodeText(bndboxXml, 'xmin'),
+          ymin: getNodeText(bndboxXml, 'ymin'),
+          xmax: getNodeText(bndboxXml, 'xmax'),
+          ymax: getNodeText(bndboxXml, 'ymax'),
+        }
+      });
+    }
+  }
+
+  return { size: { width, height }, objects };
+}
 
 async function createWindow() {
   win = new BrowserWindow({
@@ -148,7 +193,7 @@ ipcMain.handle('get-voc-classes', async (event, { vocPath }) => {
       success: true,
       classes: [] // 返回解析到的类别
     };
-  } catch (error) {
+  } catch (error: any) {
     return {
       success: false,
       error: error.message
@@ -156,21 +201,75 @@ ipcMain.handle('get-voc-classes', async (event, { vocPath }) => {
   }
 });
 
+// Update the convert-voc-to-yolo handler
 ipcMain.handle('convert-voc-to-yolo', async (event, { vocPath, outputPath, classes }) => {
   try {
-    // 这里添加转换逻辑
-    return {
-      success: true,
-      stats: {
-        total: 0,
-        success: 0,
-        failed: 0
-      }
+    const stats = {
+      total: 0,
+      success: 0,
+      failed: 0
     };
-  } catch (error) {
+
+    // Create output directory
+    await mkdir(outputPath, { recursive: true });
+
+    // Get XML files list
+    const files = await readdir(vocPath);
+    const xmlFiles = files.filter(file => file.endsWith('.xml'));
+    stats.total = xmlFiles.length;
+
+    // Process each XML file
+    for (const xmlFile of xmlFiles) {
+      try {
+        const baseName = path.basename(xmlFile, '.xml');
+        const xmlPath = path.join(vocPath, xmlFile);
+        const xmlContent = await readFile(xmlPath, 'utf-8');
+        const result = parseVOCXML(xmlContent);
+
+        const imageWidth = parseFloat(result.size.width);
+        const imageHeight = parseFloat(result.size.height);
+        const yoloAnnotations: string[] = [];
+
+        result.objects.forEach(obj => {
+          const classIndex = classes.indexOf(obj.name);
+          if (classIndex !== -1) {
+            const bbox = obj.bndbox;
+            const xmin = parseFloat(bbox.xmin);
+            const ymin = parseFloat(bbox.ymin);
+            const xmax = parseFloat(bbox.xmax);
+            const ymax = parseFloat(bbox.ymax);
+
+            // Convert to YOLO format (x_center, y_center, width, height)
+            const x_center = (xmin + xmax) / (2.0 * imageWidth);
+            const y_center = (ymin + ymax) / (2.0 * imageHeight);
+            const width = (xmax - xmin) / imageWidth;
+            const height = (ymax - ymin) / imageHeight;
+
+            yoloAnnotations.push(
+              `${classIndex} ${x_center.toFixed(6)} ${y_center.toFixed(6)} ${width.toFixed(6)} ${height.toFixed(6)}`
+            );
+          }
+        });
+
+        if (yoloAnnotations.length > 0) {
+          await writeFile(
+            path.join(outputPath, `${baseName}.txt`),
+            yoloAnnotations.join('\n'),
+            'utf-8'
+          );
+          stats.success++;
+        }
+      } catch (error) {
+        stats.failed++;
+        console.error(`Error processing ${xmlFile}:`, error);
+      }
+    }
+
+    return { success: true, stats };
+  } catch (error: any) {
     return {
       success: false,
-      error: error.message
+      error: error?.message || 'Unknown error'
     };
   }
 });
