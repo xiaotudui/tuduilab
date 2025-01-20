@@ -165,6 +165,34 @@ export default function Voc2Yolo() {
           </div>
         </div>
 
+        <div className="flex gap-4">
+          <button
+            onClick={handleFileSelect}
+            className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50"
+            disabled={isConverting}
+          >
+            <span>📁</span>
+            选择VOC数据集
+          </button>
+          <button
+            onClick={handleOutputDir}
+            className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50"
+            disabled={isConverting}
+          >
+            <span>💾</span>
+            选择输出目录
+          </button>
+          <button
+            onClick={handleConvert}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50"
+            disabled={isConverting || !vocPath || !outputPath}
+          >
+            <span>🔄</span>
+            {isConverting ? '转换中...' : '开始转换'}
+          </button>
+        </div>
+      </div>
+
         <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 mb-6">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-medium">数据集类别</h3>
@@ -229,34 +257,6 @@ export default function Voc2Yolo() {
             </div>
           )}
         </div>
-
-        <div className="flex gap-4">
-          <button
-            onClick={handleFileSelect}
-            className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50"
-            disabled={isConverting}
-          >
-            <span>📁</span>
-            选择VOC数据集
-          </button>
-          <button
-            onClick={handleOutputDir}
-            className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50"
-            disabled={isConverting}
-          >
-            <span>💾</span>
-            选择输出目录
-          </button>
-          <button
-            onClick={handleConvert}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50"
-            disabled={isConverting || !vocPath || !outputPath}
-          >
-            <span>🔄</span>
-            {isConverting ? '转换中...' : '开始转换'}
-          </button>
-        </div>
-      </div>
 
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
         <h3 className="text-lg font-medium mb-4">转换日志</h3>
