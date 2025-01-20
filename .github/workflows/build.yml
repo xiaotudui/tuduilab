@@ -39,9 +39,16 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload Artifact
+      - name: Upload Packaged Artifact
         uses: actions/upload-artifact@v3
         with:
-          name: release_on_${{ matrix. os }}
-          path: release/
+          name: release_packaged_${{ matrix.os }}
+          path: dist/*.exe
+          retention-days: 5
+
+      - name: Upload Unpacked Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: release_unpacked_${{ matrix.os }}
+          path: dist/win-unpacked/
           retention-days: 5
