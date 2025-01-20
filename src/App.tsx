@@ -1,7 +1,10 @@
-import { useState } from 'react'
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import Header from './components/Header';
+import JsonFormatter from './pages/JsonFormatter';
+import ImageConverter from './pages/ImageConverter';
+import Home from './pages/Home'; // 我们需要创建这个组件
 import UpdateElectron from '@/components/update'
 import Footer from './components/Footer'
-import Header from './components/Header'
 import logoVite from './assets/logo2.svg'
 import logoElectron from './assets/logo-electron.svg'
 import './App.css'
@@ -49,28 +52,17 @@ const tools: Tool[] = [
 ];
 
 function App() {
-  const [count, setCount] = useState(0)
   return (
-    <>
+    <Router>
       <Header />
-      <div className='app-container'>
-        <h1 className='text-3xl font-bold text-center mb-8'>土堆工具箱</h1>
-        <div className='tools-grid'>
-          {tools.map((tool) => (
-            <a 
-              key={tool.id}
-              href={tool.path}
-              className='tool-card'
-            >
-              <div className='tool-icon'>{tool.icon}</div>
-              <h2 className='tool-title'>{tool.title}</h2>
-              <p className='tool-description'>{tool.description}</p>
-            </a>
-          ))}
-        </div>
-      </div>
-    </>
-  )
+      <Routes>
+        <Route path="/" element={<Home tools={tools} />} />
+        <Route path="/tools/json" element={<JsonFormatter />} />
+        <Route path="/tools/image" element={<ImageConverter />} />
+        {/* 添加其他工具路由 */}
+      </Routes>
+    </Router>
+  );
 }
 
-export default App
+export default App;
