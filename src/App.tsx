@@ -20,10 +20,10 @@ interface Tool {
 const tools: Tool[] = [
   {
     id: 'voc2yolo',
-    title: 'VOC标注格式转YOLO标注格式',
+    title: 'VOC转YOLO格式转换器',
     description: '提供VOC标注格式转YOLO标注格式工具',
     icon: '🔧',
-    path: '/tools/json'
+    path: '/tools/Voc2Yolo'
   },
   // 可以继续添加更多工具...
 ];
