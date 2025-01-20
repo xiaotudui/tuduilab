@@ -178,6 +178,7 @@ code {
   display: flex;
   align-items: center;
   gap: 1rem;
+  min-width: 200px;
 }
 
 .header-logo {
@@ -192,8 +193,9 @@ code {
 }
 
 .header-nav {
+  flex: 1;
   display: flex;
-  gap: 2rem;
+  justify-content: center;
 }
 
 .nav-link {
@@ -224,10 +226,19 @@ code {
   width: 100%;
 }
 
+.social-link {
+  color: #4b5563;
+  transition: color 0.3s ease;
+}
+
+.social-link:hover {
+  color: #646cff;
+}
+
 .header-right {
+  min-width: 200px;
   display: flex;
-  align-items: center;
-  gap: 1rem;
+  justify-content: flex-end;
 }
 
 .theme-toggle {
