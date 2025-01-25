@@ -291,7 +291,7 @@ ipcMain.handle('select-json-file', async () => {
 
 ipcMain.handle('get-coco-classes', async (event, { cocoPath }) => {
   try {
-    const cocoData = JSON.parse(await fs.readFile(cocoPath, 'utf8'));
+    const cocoData = JSON.parse(await readFile(cocoPath, 'utf8'));
     if (!cocoData.categories || !Array.isArray(cocoData.categories)) {
       return { 
         success: false, 
@@ -318,15 +318,15 @@ ipcMain.handle('get-coco-classes', async (event, { cocoPath }) => {
 
 ipcMain.handle('convert-coco-to-yolo', async (event, { cocoPath, outputPath, classes }) => {
   try {
-    const cocoData = JSON.parse(await fs.readFile(cocoPath, 'utf8'));
+    const cocoData = JSON.parse(await readFile(cocoPath, 'utf8'));
     let success = 0;
     let failed = 0;
     
     // 创建输出目录
-    await fs.mkdir(outputPath, { recursive: true });
+    await mkdir(outputPath, { recursive: true });
     
     // 创建classes.txt
-    await fs.writeFile(path.join(outputPath, 'classes.txt'), classes.join('\n'));
+    await writeFile(path.join(outputPath, 'classes.txt'), classes.join('\n'));
     
     // 处理每个图片的标注
     for (const image of cocoData.images) {
@@ -345,7 +345,7 @@ ipcMain.handle('convert-coco-to-yolo', async (event, { cocoPath, outputPath, cla
           return `${categoryId} ${x_center} ${y_center} ${width} ${height}`;
         });
         
-        await fs.writeFile(labelPath, labels.join('\n'));
+        await writeFile(labelPath, labels.join('\n'));
         success++;
       } catch (err) {
         failed++;
