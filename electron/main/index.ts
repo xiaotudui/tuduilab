@@ -316,20 +316,47 @@ ipcMain.handle('get-coco-classes', async (event, { cocoPath }) => {
   }
 });
 
+// 添加一个标志来控制转换过程
+let isConverting = false;
+
+ipcMain.handle('stop-coco-conversion', async () => {
+  isConverting = false;
+  return { success: true };
+});
+
 ipcMain.handle('convert-coco-to-yolo', async (event, { cocoPath, outputPath, classes }) => {
   try {
+    isConverting = true;
     const cocoData = JSON.parse(await readFile(cocoPath, 'utf8'));
     let success = 0;
     let failed = 0;
     
-    // 创建输出目录
     await mkdir(outputPath, { recursive: true });
-    
-    // 创建classes.txt
     await writeFile(path.join(outputPath, 'classes.txt'), classes.join('\n'));
     
+    const totalImages = cocoData.images.length;
+    
     // 处理每个图片的标注
-    for (const image of cocoData.images) {
+    for (let i = 0; i < cocoData.images.length; i++) {
+      if (!isConverting) {
+        return {
+          success: true,
+          stats: {
+            total: totalImages,
+            success,
+            failed,
+            stopped: true
+          }
+        };
+      }
+
+      const image = cocoData.images[i];
+      // 发送进度更新
+      event.sender.send('conversion-progress', {
+        current: i + 1,
+        total: totalImages
+      });
+
       const annotations = cocoData.annotations.filter((ann: any) => ann.image_id === image.id);
       const labelPath = path.join(outputPath, path.basename(image.file_name).replace(/\.[^/.]+$/, '.txt'));
       
@@ -337,7 +364,6 @@ ipcMain.handle('convert-coco-to-yolo', async (event, { cocoPath, outputPath, cla
         const labels = annotations.map((ann: any) => {
           const categoryId = classes.indexOf(cocoData.categories.find((cat: any) => cat.id === ann.category_id).name);
           const [x, y, w, h] = ann.bbox;
-          // 转换为YOLO格式（归一化坐标）
           const x_center = (x + w/2) / image.width;
           const y_center = (y + h/2) / image.height;
           const width = w / image.width;
@@ -352,15 +378,17 @@ ipcMain.handle('convert-coco-to-yolo', async (event, { cocoPath, outputPath, cla
       }
     }
     
+    isConverting = false;
     return {
       success: true,
       stats: {
-        total: cocoData.images.length,
+        total: totalImages,
         success,
         failed
       }
     };
   } catch (error: any) {
+    isConverting = false;
     return { success: false, error: error.message };
   }
 });

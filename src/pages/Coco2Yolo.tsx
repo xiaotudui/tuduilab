@@ -28,6 +28,8 @@ export default function Coco2Yolo() {
   const [isLoadingClasses, setIsLoadingClasses] = useState(false);
   const [editingClass, setEditingClass] = useState<{index: number, value: string} | null>(null);
   const [useDefaultClasses, setUseDefaultClasses] = useState(true);
+  const [progress, setProgress] = useState(0);
+  const [totalImages, setTotalImages] = useState(0);
 
   const addLog = (message: string, type?: 'success' | 'error' | 'warning') => {
     const time = new Date().toLocaleTimeString();
@@ -98,6 +100,16 @@ export default function Coco2Yolo() {
     }
   };
 
+  // 停止转换
+  const handleStop = async () => {
+    try {
+      await window.ipcRenderer.invoke('stop-coco-conversion');
+      addLog('正在停止转换...', 'warning');
+    } catch (error: any) {
+      addLog(`停止转换失败: ${error.message}`, 'error');
+    }
+  };
+
   // 开始转换
   const handleConvert = async () => {
     if (!cocoPath || !outputPath) {
@@ -106,9 +118,20 @@ export default function Coco2Yolo() {
     }
 
     setIsConverting(true);
+    setProgress(0);
     addLog('开始转换为YOLO格式...');
+
     try {
-      const result = await window.electron.ipcRenderer.invoke('convert-coco-to-yolo', {
+      // 监听进度更新
+      window.ipcRenderer.on('conversion-progress', (event, { current, total }) => {
+        setProgress(current);
+        setTotalImages(total);
+        if (current % 100 === 0 || current === total) { // 每100张图片记录一次日志
+          addLog(`处理进度: ${current}/${total}`);
+        }
+      });
+
+      const result = await window.ipcRenderer.invoke('convert-coco-to-yolo', {
         cocoPath,
         outputPath,
         classes
@@ -128,6 +151,9 @@ export default function Coco2Yolo() {
       addLog(`转换过程出错: ${error?.message || 'Unknown error'}`, 'error');
     } finally {
       setIsConverting(false);
+      setProgress(0);
+      // 清理事件监听
+      window.ipcRenderer.off('conversion-progress');
     }
   };
 
@@ -167,14 +193,37 @@ export default function Coco2Yolo() {
             <span>💾</span>
             选择输出目录
           </button>
-          <button
-            onClick={handleConvert}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50"
-            disabled={isConverting || !cocoPath || !outputPath}
-          >
-            <span>🔄</span>
-            {isConverting ? '转换中...' : '开始转换'}
-          </button>
+          {isConverting ? (
+            <>
+              <div className="flex-1 flex items-center gap-4">
+                <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
+                  <div 
+                    className="bg-blue-500 h-2.5 rounded-full transition-all duration-300"
+                    style={{ width: `${(progress / totalImages) * 100}%` }}
+                  />
+                </div>
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  {progress}/{totalImages}
+                </span>
+              </div>
+              <button
+                onClick={handleStop}
+                className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600"
+              >
+                <span>⏹</span>
+                停止转换
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={handleConvert}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50"
+              disabled={!cocoPath || !outputPath}
+            >
+              <span>🔄</span>
+              开始转换
+            </button>
+          )}
         </div>
       </div>
 
