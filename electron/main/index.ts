@@ -292,10 +292,27 @@ ipcMain.handle('select-json-file', async () => {
 ipcMain.handle('get-coco-classes', async (event, { cocoPath }) => {
   try {
     const cocoData = JSON.parse(await fs.readFile(cocoPath, 'utf8'));
-    const classes = cocoData.categories.map((cat: any) => cat.name);
-    return { success: true, classes };
+    if (!cocoData.categories || !Array.isArray(cocoData.categories)) {
+      return { 
+        success: false, 
+        error: 'COCO文件中未找到有效的类别信息' 
+      };
+    }
+    
+    // 按id排序类别
+    const sortedCategories = [...cocoData.categories].sort((a, b) => a.id - b.id);
+    const classes = sortedCategories.map(cat => cat.name);
+    
+    return { 
+      success: true, 
+      classes,
+      categoryIds: sortedCategories.map(cat => cat.id) // 保存原始id便于后续转换
+    };
   } catch (error: any) {
-    return { success: false, error: error.message };
+    return { 
+      success: false, 
+      error: error.message 
+    };
   }
 });
 

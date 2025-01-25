@@ -42,9 +42,8 @@ export default function Coco2Yolo() {
       if (result.success) {
         setCocoPath(result.path);
         addLog(`已选择数据集文件: ${result.path}`, 'success');
-        if (!useDefaultClasses) {
-          await loadCOCOClasses(result.path);
-        }
+        // 总是尝试从文件加载类别
+        await loadCOCOClasses(result.path);
       } else {
         addLog('文件选择已取消', 'warning');
       }
@@ -76,13 +75,24 @@ export default function Coco2Yolo() {
     try {
       const result = await window.electron.ipcRenderer.invoke('get-coco-classes', { cocoPath: path });
       if (result.success) {
-        setClasses(result.classes);
-        addLog(`成功读取到 ${result.classes.length} 个类别`, 'success');
+        if (result.classes.length > 0) {
+          setClasses(result.classes);
+          setUseDefaultClasses(false);
+          addLog(`成功读取到 ${result.classes.length} 个类别`, 'success');
+        } else {
+          setClasses(DEFAULT_COCO_CLASSES);
+          setUseDefaultClasses(true);
+          addLog('数据集中未找到类别，使用默认COCO类别', 'warning');
+        }
       } else {
-        addLog(`解析类别失败：${result.error}`, 'error');
+        setClasses(DEFAULT_COCO_CLASSES);
+        setUseDefaultClasses(true);
+        addLog(`解析类别失败：${result.error}，使用默认COCO类别`, 'error');
       }
     } catch (error: any) {
-      addLog(`解析类别出错: ${error.message}`, 'error');
+      setClasses(DEFAULT_COCO_CLASSES);
+      setUseDefaultClasses(true);
+      addLog(`解析类别出错: ${error.message}，使用默认COCO类别`, 'error');
     } finally {
       setIsLoadingClasses(false);
     }
@@ -168,80 +178,26 @@ export default function Coco2Yolo() {
         </div>
       </div>
 
-      <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 mb-6">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-medium">数据集类别</h3>
-          <div className="flex gap-2">
-            <button
-              onClick={() => setUseDefaultClasses(!useDefaultClasses)}
-              className="px-3 py-1 text-sm bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50"
-              disabled={isConverting}
-            >
-              {useDefaultClasses ? '使用数据集类别' : '使用默认类别'}
-            </button>
-            <button
-              onClick={() => setClasses(DEFAULT_COCO_CLASSES)}
-              className="px-3 py-1 text-sm bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50"
-              disabled={isConverting}
-            >
-              重置类别
-            </button>
-            <button
-              onClick={() => setClasses([...classes, `class_${classes.length}`])}
-              className="px-3 py-1 text-sm bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50"
-              disabled={isConverting}
-            >
-              添加类别
-            </button>
+      {cocoPath && (
+        <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 mb-6">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-medium">数据集类别</h3>
           </div>
-        </div>
 
-        {isLoadingClasses ? (
-          <div className="text-center py-4">正在加载类别...</div>
-        ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-            {classes.map((cls, index) => (
-              <div key={index} className="flex items-center bg-gray-50 dark:bg-gray-900 rounded-md p-2 gap-2">
-                <span className="bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded text-sm">{index}</span>
-                {editingClass?.index === index ? (
-                  <input
-                    type="text"
-                    value={editingClass.value}
-                    onChange={(e) => setEditingClass({ index, value: e.target.value })}
-                    onBlur={() => {
-                      if (editingClass.value.trim()) {
-                        const newClasses = [...classes];
-                        newClasses[index] = editingClass.value.trim();
-                        setClasses(newClasses);
-                      }
-                      setEditingClass(null);
-                    }}
-                    className="flex-1 bg-white dark:bg-gray-800 px-2 py-1 rounded border border-gray-300 dark:border-gray-600"
-                    autoFocus
-                  />
-                ) : (
-                  <span
-                    className="flex-1 cursor-pointer"
-                    onClick={() => setEditingClass({ index, value: cls })}
-                  >
-                    {cls}
-                  </span>
-                )}
-                <button
-                  onClick={() => {
-                    const newClasses = classes.filter((_, i) => i !== index);
-                    setClasses(newClasses);
-                  }}
-                  className="text-red-500 hover:text-red-600 disabled:opacity-50"
-                  disabled={isConverting}
-                >
-                  ✕
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+          {isLoadingClasses ? (
+            <div className="text-center py-4">正在加载类别...</div>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+              {classes.map((cls, index) => (
+                <div key={index} className="flex items-center bg-gray-50 dark:bg-gray-900 rounded-md p-2 gap-2">
+                  <span className="bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded text-sm">{index}</span>
+                  <span className="flex-1">{cls}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
         <h3 className="text-lg font-medium mb-4">转换日志</h3>
