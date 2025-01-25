@@ -273,3 +273,77 @@ ipcMain.handle('convert-voc-to-yolo', async (event, { vocPath, outputPath, class
     };
   }
 });
+
+// 添加新的IPC处理函数
+ipcMain.handle('select-json-file', async () => {
+  const result = await dialog.showOpenDialog({
+    properties: ['openFile'],
+    filters: [
+      { name: 'JSON Files', extensions: ['json'] }
+    ]
+  });
+
+  return {
+    success: !result.canceled,
+    path: result.filePaths[0]
+  };
+});
+
+ipcMain.handle('get-coco-classes', async (event, { cocoPath }) => {
+  try {
+    const cocoData = JSON.parse(await fs.readFile(cocoPath, 'utf8'));
+    const classes = cocoData.categories.map((cat: any) => cat.name);
+    return { success: true, classes };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle('convert-coco-to-yolo', async (event, { cocoPath, outputPath, classes }) => {
+  try {
+    const cocoData = JSON.parse(await fs.readFile(cocoPath, 'utf8'));
+    let success = 0;
+    let failed = 0;
+    
+    // 创建输出目录
+    await fs.mkdir(outputPath, { recursive: true });
+    
+    // 创建classes.txt
+    await fs.writeFile(path.join(outputPath, 'classes.txt'), classes.join('\n'));
+    
+    // 处理每个图片的标注
+    for (const image of cocoData.images) {
+      const annotations = cocoData.annotations.filter((ann: any) => ann.image_id === image.id);
+      const labelPath = path.join(outputPath, path.basename(image.file_name).replace(/\.[^/.]+$/, '.txt'));
+      
+      try {
+        const labels = annotations.map((ann: any) => {
+          const categoryId = classes.indexOf(cocoData.categories.find((cat: any) => cat.id === ann.category_id).name);
+          const [x, y, w, h] = ann.bbox;
+          // 转换为YOLO格式（归一化坐标）
+          const x_center = (x + w/2) / image.width;
+          const y_center = (y + h/2) / image.height;
+          const width = w / image.width;
+          const height = h / image.height;
+          return `${categoryId} ${x_center} ${y_center} ${width} ${height}`;
+        });
+        
+        await fs.writeFile(labelPath, labels.join('\n'));
+        success++;
+      } catch (err) {
+        failed++;
+      }
+    }
+    
+    return {
+      success: true,
+      stats: {
+        total: cocoData.images.length,
+        success,
+        failed
+      }
+    };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+});
