@@ -1,0 +1,22 @@
+.header-left {
+  display: flex;
+  align-items: center;
+}
+
+.header-left a {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+}
+
+.header-logo {
+  width: 2rem;
+  height: 2rem;
+  object-fit: contain;
+}
+
+.header-title {
+  font-size: 1.125rem;
+  line-height: 1.75rem;
+} 

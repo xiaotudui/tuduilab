@@ -7,8 +7,10 @@ export default function Header() {
     <header className="app-header">
       <div className="header-content">
         <div className="header-left">
-          <img src={logoVite} className="header-logo" alt="Logo" />
-          <span className="header-title">土堆实验室</span>
+          <Link to="/" className="flex items-center gap-2">
+            <img src={logoVite} className="header-logo w-8 h-8" alt="Logo" />
+            <span className="header-title text-lg">土堆实验室</span>
+          </Link>
         </div>
         
         <nav className="header-nav flex-1 flex justify-center">
